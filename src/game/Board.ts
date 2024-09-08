@@ -101,8 +101,6 @@ export class Board {
   };
 
   start = () => {
-    let curTime = Date.now();
-    let startTime = Date.now();
     let turn = 0;
 
     const releaseKey = () => {
@@ -150,51 +148,44 @@ export class Board {
 
     document.addEventListener("keydown", handleKeyDown);
 
-    const frame = () => {
-      // console.log(Date.now() - curTime);
-      curTime = Date.now();
-
-      // if (turn > 7) return;
-
-      if (curTime - startTime >= 500) {
-        startTime = curTime;
-        // console.log({ turn });
-        turn = turn + 1;
-
-        if (this.curFigureY + this.curFigure.height > this.height) {
-          this.newFigure();
-        }
-
-        this.ctx2d.clearRect(
-          0,
-          0,
-          this.width * blockSize,
-          this.height * blockSize
-        );
+    setInterval(() => {
+      if (
+        this.collision({
+          curX: this.curFigureX,
+          curY: this.curFigureY,
+        })
+      ) {
+        this.merge();
         this.drawField();
+        this.newFigure();
+        return;
+      }
+      turn++;
+      this.curFigureY++;
+    }, 500);
 
-        this.curFigure.draw({
-          x: this.curFigureX,
-          y: this.curFigureY,
-        });
+    const frame = () => {
+      requestAnimationFrame(frame);
 
-        if (
-          this.collision({
-            curX: this.curFigureX,
-            curY: this.curFigureY,
-          })
-        ) {
-          this.merge();
-          this.drawField();
-          this.newFigure();
-          requestAnimationFrame(frame);
-          return;
-        }
+      /// time limit
+      if (turn > 1000) return;
 
-        this.curFigureY++;
+      if (this.curFigureY + this.curFigure.height > this.height) {
+        this.newFigure();
       }
 
-      requestAnimationFrame(frame);
+      this.ctx2d.clearRect(
+        0,
+        0,
+        this.width * blockSize,
+        this.height * blockSize
+      );
+      this.drawField();
+
+      this.curFigure.draw({
+        x: this.curFigureX,
+        y: this.curFigureY,
+      });
     };
 
     frame();
